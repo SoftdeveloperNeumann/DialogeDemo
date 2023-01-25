@@ -1,16 +1,23 @@
 package com.example.dialogedemo
 
+import android.app.DatePickerDialog
 import android.content.DialogInterface
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import android.widget.DatePicker
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.example.dialogedemo.databinding.ActivityMainBinding
 import com.example.dialogedemo.databinding.DialogInsertBinding
 import com.google.android.material.snackbar.Snackbar
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
     lateinit var binding: ActivityMainBinding
     lateinit var dialogBinding: DialogInsertBinding
@@ -55,5 +62,21 @@ class MainActivity : AppCompatActivity() {
                 .show()
         }
 
+        binding.btnDate.setOnClickListener {
+            DatePickerFragment().show(supportFragmentManager,DatePickerFragment.TAG)
+        }
+
+    }
+
+    override fun onDateSet(view: DatePicker?, year: Int, month: Int, day: Int) {
+
+        val date = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            LocalDate.of(year, month + 1, day).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+        }else{
+           val tmpDate =SimpleDateFormat("yyyy-MM-dd").parse("$year-${month - 1}-$day")
+            SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY).format(tmpDate)
+        }
+
+        binding.tvOutput.text = "Das Datum ist: $date"
     }
 }
