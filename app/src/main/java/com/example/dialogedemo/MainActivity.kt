@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.DatePicker
+import android.widget.TextView
 import android.widget.TimePicker
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -21,7 +22,8 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
+class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener,
+    TimePickerDialog.OnTimeSetListener, DialogInterface.OnClickListener {
 
     lateinit var binding: ActivityMainBinding
     lateinit var dialogBinding: DialogInsertBinding
@@ -29,17 +31,19 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener, Ti
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        dialogBinding = DialogInsertBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.btnToast.setOnClickListener { view : View ->
+        binding.btnToast.setOnClickListener { view: View ->
             Toast.makeText(this, "ein simpler Toast", Toast.LENGTH_SHORT).show()
         }
 
-        binding.btnDelete.setOnClickListener { view:View ->
+        binding.btnDelete.setOnClickListener { view: View ->
             val forUndo = binding.tvOutput.text
             binding.tvOutput.text = ""
-            val sb = Snackbar.make(binding.rootLayout,"Löschen rückgängig machen",Snackbar.LENGTH_LONG)
-            sb.setAction("UNDO"){
+            val sb =
+                Snackbar.make(binding.rootLayout, "Löschen rückgängig machen", Snackbar.LENGTH_LONG)
+            sb.setAction("UNDO") {
                 binding.tvOutput.text = forUndo
             }
             sb.show()
@@ -47,19 +51,19 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener, Ti
 
         binding.btnInsert.setOnClickListener {
             val builder = AlertDialog.Builder(this)
-            dialogBinding = DialogInsertBinding.inflate(layoutInflater)
+
             // Dialog zusammenbauen
 
             builder.setView(dialogBinding.root)
                 .setTitle("Texteingabe")
 
-                .setPositiveButton("OK"){dialog: DialogInterface, which:Int ->
+                .setPositiveButton("OK") { dialog: DialogInterface, which: Int ->
                     binding.tvOutput.text = dialogBinding.editTextTextPersonName.text
                 }
-                .setNegativeButton("cancel"){ dialog: DialogInterface, which: Int ->
+                .setNegativeButton("cancel") { dialog: DialogInterface, which: Int ->
                     dialog.cancel()
                 }
-                .setNeutralButton("noch ne Funktion"){ dialog: DialogInterface, which: Int ->
+                .setNeutralButton("noch ne Funktion") { dialog: DialogInterface, which: Int ->
 
                 }
                 .create()
@@ -67,21 +71,25 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener, Ti
         }
 
         binding.btnDate.setOnClickListener {
-            DatePickerFragment().show(supportFragmentManager,DatePickerFragment.TAG)
+            DatePickerFragment().show(supportFragmentManager, DatePickerFragment.TAG)
         }
 
         binding.btnTime.setOnClickListener {
-            TimePickerFragment().show(supportFragmentManager,TimePickerFragment.TAG)
+            TimePickerFragment().show(supportFragmentManager, TimePickerFragment.TAG)
+        }
+
+        binding.btnInsertNeu.setOnClickListener {
+            AlertDialogFragment().show(supportFragmentManager, AlertDialogFragment.TAG)
         }
 
     }
 
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, day: Int) {
 
-        val date = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val date = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             LocalDate.of(year, month + 1, day).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-        }else{
-           val tmpDate =SimpleDateFormat("yyyy-MM-dd").parse("$year-${month - 1}-$day")
+        } else {
+            val tmpDate = SimpleDateFormat("yyyy-MM-dd").parse("$year-${month - 1}-$day")
             SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY).format(tmpDate)
         }
 
@@ -89,12 +97,22 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener, Ti
     }
 
     override fun onTimeSet(view: TimePicker?, hour: Int, minute: Int) {
-       val time = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-           LocalTime.of(hour, minute).format(DateTimeFormatter.ofPattern("HH:mm"))
-       }else{
-           val tmp = SimpleDateFormat("HH:mm").parse(("$hour:$minute"))
-           SimpleDateFormat("HH:mm", Locale.GERMANY).format(tmp)
-       }
+        val time = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            LocalTime.of(hour, minute).format(DateTimeFormatter.ofPattern("HH:mm"))
+        } else {
+            val tmp = SimpleDateFormat("HH:mm").parse(("$hour:$minute"))
+            SimpleDateFormat("HH:mm", Locale.GERMANY).format(tmp)
+        }
         binding.tvOutput.text = "Die Uhrzeit ist: $time"
+    }
+
+    override fun onClick(dialog: DialogInterface?, which: Int) {
+        val alertDialog = dialog as AlertDialog
+        val etContent = alertDialog.findViewById<TextView>(R.id.editTextTextPersonName)  //dialogBinding.editTextTextPersonName Binding geht hier nicht
+        when(which){
+            DialogInterface.BUTTON_POSITIVE -> binding.tvOutput.text = etContent?.text
+            DialogInterface.BUTTON_NEGATIVE -> binding.tvOutput.text = ""
+            DialogInterface.BUTTON_NEUTRAL -> binding.tvOutput.text = ""
+        }
     }
 }
